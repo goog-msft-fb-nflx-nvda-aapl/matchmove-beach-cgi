@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MatchMove — Enoshima Beach VFX Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sand: #d4b896;
+    --dusk: #c4784a;
+    --ember: #e8562a;
+    --sky: #4a7fa5;
+    --horizon: #f2dfc0;
+    --dark: #1a1410;
+    --mid: #2e2118;
+    --text: #f5ede0;
+    --muted: #a8967e;
+    --accent: #e8b06a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 1.8;
+    overflow-x: hidden;
+  }
+
+  /* ── GRAIN OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.5;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 0 80px 0;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      170deg,
+      #0d1a2e 0%,
+      #1a2e3a 25%,
+      #2a3d3a 45%,
+      #3d3020 65%,
+      #5c3a1a 80%,
+      #7a4020 100%
+    );
+  }
+
+  .hero-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 40% at 50% 110%, rgba(232,86,42,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 30% at 20% 80%, rgba(196,120,74,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 25% at 80% 70%, rgba(74,127,165,0.08) 0%, transparent 50%);
+  }
+
+  /* horizon line */
+  .horizon-line {
+    position: absolute;
+    left: 0; right: 0;
+    top: 58%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(232,176,106,0.4) 30%, rgba(232,176,106,0.6) 50%, rgba(232,176,106,0.4) 70%, transparent);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 0 60px;
+  }
+
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(52px, 7vw, 96px);
+    font-weight: 400;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.4s forwards;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(18px, 2.5vw, 26px);
+    color: var(--muted);
+    margin-top: 16px;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.6s forwards;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+  }
+
+  .hero-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .meta-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .meta-val {
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  /* ── SCROLL INDICATOR ── */
+  .scroll-hint {
+    position: absolute;
+    bottom: 32px;
+    right: 60px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    opacity: 0;
+    animation: fadeUp 0.8s 1.2s forwards;
+  }
+
+  .scroll-line {
+    width: 40px;
+    height: 1px;
+    background: var(--muted);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scroll-line::after {
+    content: '';
+    position: absolute;
+    left: -100%;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--accent);
+    animation: scanline 2s 1.5s infinite;
+  }
+
+  /* ── VIDEO LINKS BAR ── */
+  .video-bar {
+    background: var(--mid);
+    border-top: 1px solid rgba(232,176,106,0.15);
+    border-bottom: 1px solid rgba(232,176,106,0.15);
+    padding: 20px 60px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .video-bar-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .video-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    padding: 8px 18px;
+    border: 1px solid rgba(232,176,106,0.3);
+    transition: all 0.25s;
+  }
+
+  .video-link:hover {
+    background: rgba(232,176,106,0.08);
+    border-color: var(--accent);
+  }
+
+  .video-link svg { flex-shrink: 0; }
+
+  /* ── MAIN LAYOUT ── */
+  main { max-width: 1100px; margin: 0 auto; padding: 0 60px 120px; }
+
+  /* ── SECTION HEADER ── */
+  .section {
+    padding-top: 96px;
+  }
+
+  .section-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--dusk);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .section-eyebrow::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(196,120,74,0.2);
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 400;
+    line-height: 1.1;
+    margin-bottom: 32px;
+    color: var(--text);
+  }
+
+  .section-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  /* ── PROSE ── */
+  p {
+    color: rgba(245,237,224,0.75);
+    margin-bottom: 16px;
+    max-width: 72ch;
+  }
+
+  /* ── FIGURE ── */
+  figure {
+    margin: 40px 0;
+    position: relative;
+  }
+
+  figure img {
+    width: 100%;
+    display: block;
+    border: 1px solid rgba(232,176,106,0.12);
+  }
+
+  figcaption {
+    margin-top: 12px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  figcaption::before {
+    content: '▸';
+    color: var(--dusk);
+    font-size: 9px;
+    flex-shrink: 0;
+  }
+
+  /* ── 2-COL FIGURES ── */
+  .fig-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 40px 0;
+  }
+
+  /* ── STAT GRID ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    background: rgba(232,176,106,0.12);
+    border: 1px solid rgba(232,176,106,0.12);
+    margin: 32px 0;
+  }
+
+  .stat-cell {
+    background: var(--dark);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-unit {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── PIPELINE STEPS ── */
+  .pipeline {
+    margin: 40px 0;
+    position: relative;
+  }
+
+  .pipeline::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, var(--dusk), transparent);
+  }
+
+  .pipeline-step {
+    display: flex;
+    gap: 32px;
+    padding: 0 0 40px 0;
+    position: relative;
+  }
+
+  .step-num {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    background: var(--mid);
+    border: 1px solid rgba(196,120,74,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--dusk);
+    letter-spacing: 0.1em;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-body { flex: 1; }
+
+  .step-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    padding-top: 8px;
+  }
+
+  /* ── TAG CHIPS ── */
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+  }
+
+  .tag {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--sky);
+    border: 1px solid rgba(74,127,165,0.3);
+    padding: 3px 10px;
+  }
+
+  /* ── OBJECT CARDS ── */
+  .obj-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(232,176,106,0.1);
+    border: 1px solid rgba(232,176,106,0.1);
+    margin: 32px 0;
+  }
+
+  .obj-card {
+    background: var(--mid);
+    padding: 28px;
+  }
+
+  .obj-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .obj-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .obj-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* ── LIMITATIONS BLOCK ── */
+  .limitation-list {
+    border-left: 2px solid rgba(196,120,74,0.3);
+    padding-left: 24px;
+    margin: 24px 0;
+    list-style: none;
+  }
+
+  .limitation-list li {
+    color: rgba(245,237,224,0.6);
+    margin-bottom: 12px;
+    font-size: 13px;
+    line-height: 1.7;
+    position: relative;
+  }
+
+  .limitation-list li::before {
+    content: '–';
+    position: absolute;
+    left: -20px;
+    color: var(--dusk);
+  }
+
+  /* ── FINAL STRIP ── */
+  .final-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 40px 0;
+  }
+
+  .final-strip figure { margin: 0; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid rgba(232,176,106,0.1);
+    padding: 48px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  footer span { opacity: 0.6; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(232,176,106,0.2) 30%, rgba(232,176,106,0.2) 70%, transparent);
+    margin: 80px 0 0;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scanline {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+
+  /* ── INLINE CODE ── */
+  code {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--sky);
+    background: rgba(74,127,165,0.08);
+    padding: 1px 6px;
+    border: 1px solid rgba(74,127,165,0.15);
+  }
+
+  /* ── HIGHLIGHT QUOTE ── */
+  .pull-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(20px, 2.5vw, 28px);
+    color: var(--horizon);
+    border-left: 2px solid var(--dusk);
+    padding: 8px 0 8px 28px;
+    margin: 48px 0;
+    max-width: 60ch;
+    line-height: 1.4;
+  }
+
+  @media (max-width: 768px) {
+    .hero-content, main, footer { padding-left: 24px; padding-right: 24px; }
+    .video-bar { padding: 16px 24px; }
+    .fig-row, .obj-grid, .final-strip { grid-template-columns: 1fr; }
+    .hero-meta { flex-wrap: wrap; gap: 24px; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════ HERO ════ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="horizon-line"></div>
+
+  <div class="hero-content">
+    <p class="hero-tag">VFX Production Report · May 2025</p>
+    <h1 class="hero-title">
+      Match<em>Move</em><br>Enoshima
+    </h1>
+    <p class="hero-subtitle">
+      Inserting CGI into handheld beach footage — airship, letter, woman, and a fading sunset
+    </p>
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <span class="meta-label">Location</span>
+        <span class="meta-val">Enoshima, Fujisawa, JP</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="meta-label">Shot date</span>
+        <span class="meta-val">May 30, 2025</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="meta-label">Duration</span>
+        <span class="meta-val">27.5 s · 826 frames</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="meta-label">Format</span>
+        <span class="meta-val">1080 × 1920 · 30 fps</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    Scroll
+    <span class="scroll-line"></span>
+  </div>
+</section>
+
+<!-- ════ VIDEO LINKS ════ -->
+<div class="video-bar">
+  <span class="video-bar-label">View footage</span>
+  <a href="https://www.youtube.com/shorts/hvko7LH6ucQ" target="_blank" class="video-link">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 7a2.59 2.59 0 0 0-1.83-.76H6.24A2.59 2.59 0 0 0 3.65 7a2.59 2.59 0 0 0-.76 1.83v6.34A2.59 2.59 0 0 0 6.24 17.76H17.76a2.59 2.59 0 0 0 2.59-2.59V8.83A2.59 2.59 0 0 0 19.59 7zm-7.59 7l-4-2.33 4-2.33z"/></svg>
+    Final Result
+  </a>
+  <a href="https://www.youtube.com/shorts/d1iTP9BZZ9M" target="_blank" class="video-link">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 7a2.59 2.59 0 0 0-1.83-.76H6.24A2.59 2.59 0 0 0 3.65 7a2.59 2.59 0 0 0-.76 1.83v6.34A2.59 2.59 0 0 0 6.24 17.76H17.76a2.59 2.59 0 0 0 2.59-2.59V8.83A2.59 2.59 0 0 0 19.59 7zm-7.59 7l-4-2.33 4-2.33z"/></svg>
+    Track Overlay
+  </a>
+</div>
+
+<main>
+
+  <!-- ════ 1. GOAL & SCENE PLAN ════ -->
+  <section class="section">
+    <p class="section-eyebrow">01</p>
+    <h2 class="section-title">Goal &amp; <em>Scene Plan</em></h2>
+
+    <p>The brief was to insert multiple CGI objects into a handheld beach pan shot at Enoshima — a location with sand, ocean horizon, island structures, and ambient crowd movement. The shot is a continuous pan from left to right, lasting just under 28 seconds.</p>
+
+    <p>The inserted story layers a surreal moment onto the otherwise ordinary beach scene: a Hindenburg-style airship drifts across the sky, a handwritten letter flutters through the frame, and a solitary seated woman appears on the sand — all while the daytime beach light slowly warms into a golden sunset.</p>
+
+    <div class="pull-quote">
+      A surreal beach moment — deliberate, quiet, strange — designed to feel plausible before it is questioned.
+    </div>
+
+    <figure>
+      <img src="./report_assets/01_source_contact_sheet.jpg" alt="Source contact sheet">
+      <figcaption>Sampled source frames showing the beach pan and shot composition.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ════ 2. SOURCE FOOTAGE ════ -->
+  <section class="section">
+    <p class="section-eyebrow">02</p>
+    <h2 class="section-title">Source Footage &amp; <em>Constraints</em></h2>
+
+    <p>The source clip was shot handheld at Enoshima beach in portrait orientation. The camera performs a mostly horizontal pan with a small downward drift. Despite the casual handheld nature, the sand mid-ground provides a reliably textured tracking surface.</p>
+
+    <div class="stat-grid">
+      <div class="stat-cell">
+        <span class="stat-label">Resolution</span>
+        <span class="stat-value">1080</span>
+        <span class="stat-unit">× 1920 px (portrait)</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Frame rate</span>
+        <span class="stat-value">30</span>
+        <span class="stat-unit">fps</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Frame count</span>
+        <span class="stat-value">826</span>
+        <span class="stat-unit">frames</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Duration</span>
+        <span class="stat-value">27.5</span>
+        <span class="stat-unit">seconds</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Horiz. pan</span>
+        <span class="stat-value">+31</span>
+        <span class="stat-unit">px / 10-frame step (median)</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Vert. drift</span>
+        <span class="stat-value">−4.75</span>
+        <span class="stat-unit">px / 10-frame step (median)</span>
+      </div>
+    </div>
+
+    <p>Key tracking challenges: sky and water regions offer no stable features; moving people are tracked as false positives; wave motion creates spurious optical flow. The stable sand mid-ground between frames 300–540 (10–18 s) was the primary anchor zone for CGI placement.</p>
+  </section>
+
+  <!-- ════ 3. VIDEO UNDERSTANDING ════ -->
+  <section class="section">
+    <p class="section-eyebrow">03</p>
+    <h2 class="section-title">Video Understanding &amp; <em>Scene Decomposition</em></h2>
+
+    <p>The source clip was described using a video-understanding model to produce a structured semantic summary. This guided subsequent decisions about tracking regions, CGI placement zones, and areas to exclude.</p>
+
+    <div class="tags">
+      <span class="tag">Sandy beach</span>
+      <span class="tag">Ocean horizon</span>
+      <span class="tag">Island/harbor</span>
+      <span class="tag">Crowd movement</span>
+      <span class="tag">Horizontal pan</span>
+      <span class="tag">Handheld</span>
+      <span class="tag">Sky — no track</span>
+      <span class="tag">Water — no track</span>
+    </div>
+
+    <p>The model confirmed good CGI placement potential on the sand and sky, and flagged sky, water, waves, and moving people as unreliable tracking regions. The location was confirmed as Enoshima, Fujisawa, Kanagawa, Japan, which informed environmental context used in depth and segmentation passes.</p>
+  </section>
+
+  <!-- ════ 4. TRACKING ════ -->
+  <section class="section">
+    <p class="section-eyebrow">04</p>
+    <h2 class="section-title">Tracking &amp; <em>Camera Motion</em></h2>
+
+    <p>OpenCV feature detection and optical-flow tracking were applied to sampled frames to characterize camera motion. A robust affine estimate linked each consecutive pair, with RANSAC filtering to reject moving-object outliers. The motion was classified as a rightward horizontal pan.</p>
+
+    <div class="fig-row">
+      <figure>
+        <img src="./report_assets/02_track_overlay_05s.jpg" alt="Early feature tracks at 5s">
+        <figcaption>Early OpenCV feature tracks — frame ~0:05.</figcaption>
+      </figure>
+      <figure>
+        <img src="./report_assets/03_track_overlay_14s.jpg" alt="Mid-shot feature tracks at 14s">
+        <figcaption>Mid-shot feature tracks during the main CGI window — frame ~0:14.</figcaption>
+      </figure>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-cell">
+        <span class="stat-label">Analysis step</span>
+        <span class="stat-value">10</span>
+        <span class="stat-unit">frames (~0.333 s)</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Analyzed steps</span>
+        <span class="stat-value">82</span>
+        <span class="stat-unit">steps</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Median tracked pts</span>
+        <span class="stat-value">367.5</span>
+        <span class="stat-unit">per step</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Median RANSAC inliers</span>
+        <span class="stat-value">248.5</span>
+        <span class="stat-unit">per step</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 5. SEGMENTATION & DEPTH ════ -->
+  <section class="section">
+    <p class="section-eyebrow">05</p>
+    <h2 class="section-title">Semantic Segmentation &amp; <em>Depth Context</em></h2>
+
+    <p>GPU-accelerated semantic segmentation (SegFormer) produced per-frame class masks grouped into: sky, water, sand/ground, people, structures, rail/fence, and rocks. A relative depth model produced per-frame disparity maps for spatial context.</p>
+
+    <p>Together these two passes allowed the pipeline to identify stable sand regions, avoid people and water, and choose sensible z-depth references for the woman and airship placement in 2.5D space.</p>
+
+    <div class="fig-row">
+      <figure>
+        <img src="./report_assets/04_semantic_segmentation_overlay_14s.jpg" alt="Segmentation overlay at 14s">
+        <figcaption>GPU semantic segmentation overlay at ~14.9 s.</figcaption>
+      </figure>
+      <figure>
+        <img src="./report_assets/05_relative_depth_14s.png" alt="Relative depth at 14s">
+        <figcaption>Relative depth estimate used as spatial reference — same frame.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ════ 6. RANSAC ANCHOR ════ -->
+  <section class="section">
+    <p class="section-eyebrow">06</p>
+    <h2 class="section-title">RANSAC Anchor Tracking for <em>Stable Placement</em></h2>
+
+    <p>Simply parenting the seated woman to the screen produces an artificial sliding look during the pan. To counter this, a single sand anchor point was manually chosen in the stable beach section and propagated through neighboring frames using RANSAC-filtered affine transforms. The resulting 2D world-locked path was used to keyframe the woman's image plane in Blender.</p>
+
+    <figure>
+      <img src="./report_assets/06_ransac_anchor_path_and_inliers.jpg" alt="RANSAC anchor path">
+      <figcaption>RANSAC-accumulated sand anchor path and inlier quality across the tracked window.</figcaption>
+    </figure>
+
+    <div class="stat-grid">
+      <div class="stat-cell">
+        <span class="stat-label">Tracked window</span>
+        <span class="stat-value">300–540</span>
+        <span class="stat-unit">frames (10 – 18 s)</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Anchor frame</span>
+        <span class="stat-value">447</span>
+        <span class="stat-unit">frame index</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Links / tracks</span>
+        <span class="stat-value">80 / 81</span>
+        <span class="stat-unit">propagation steps</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Median inliers</span>
+        <span class="stat-value">~1185</span>
+        <span class="stat-unit">per RANSAC step</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 7. BLENDER ════ -->
+  <section class="section">
+    <p class="section-eyebrow">07</p>
+    <h2 class="section-title">Blender Scene Construction &amp; <em>Object Design</em></h2>
+
+    <p>The Blender scene was built as a 2.5D transparent CGI layer aligned to the source video frame dimensions. Transparent film rendering (PNG RGBA) was used throughout so the layer could be composited over the original MP4 without a background colour clash.</p>
+
+    <div class="obj-grid">
+      <div class="obj-card">
+        <span class="obj-icon">🛸</span>
+        <div class="obj-name">Hindenburg Airship</div>
+        <p class="obj-desc">Procedural mesh: elongated hull, gondola, fins, propeller detail. Left-to-right flythrough with time-varying scale for far-to-near parallax. Slight rotation wobble prevents camera-lock artefacts.</p>
+      </div>
+      <div class="obj-card">
+        <span class="obj-icon">✉️</span>
+        <div class="obj-name">Flying Letter</div>
+        <p class="obj-desc">Procedural thin envelope with animated flap. Drifting, falling path with combined translation and rotation. Exits visible frame cleanly before being hidden — no sudden pop at the end.</p>
+      </div>
+      <div class="obj-card">
+        <span class="obj-icon">🧍‍♀️</span>
+        <div class="obj-name">Seated Woman</div>
+        <p class="obj-desc">Realistic cutout image plane (<code>seated_woman_cutout.png</code>). Keyed to the RANSAC sand-anchor track. No artificial black shadow — it read as fake on the detailed sand texture.</p>
+      </div>
+    </div>
+
+    <div class="fig-row">
+      <figure>
+        <img src="./report_assets/07_inserted_woman_cutout.png" alt="Woman cutout asset">
+        <figcaption>Realistic seated woman cutout used as a flat image plane in Blender.</figcaption>
+      </figure>
+      <figure>
+        <img src="./report_assets/08_transparent_cgi_layer_frame450.png" alt="Transparent CGI layer frame 450">
+        <figcaption>Transparent Blender CGI render layer before compositing — frame 450.</figcaption>
+      </figure>
+    </div>
+
+    <figure>
+      <img src="./report_assets/09_blender_composite_preview_frame450.jpg" alt="Blender composite preview">
+      <figcaption>Early Blender composite preview at frame 450, before final FFmpeg color grade.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ════ 8. COMPOSITING ════ -->
+  <section class="section">
+    <p class="section-eyebrow">08</p>
+    <h2 class="section-title">Compositing, Music &amp; <em>Sunset Color Grade</em></h2>
+
+    <p>The final composite was assembled with FFmpeg in a single pass: the original video forms the base layer, the 826-frame RGBA PNG sequence from Blender is overlaid, and the background music is looped, trimmed, and faded out over the final 1.5 seconds.</p>
+
+    <p>Changing only Blender's world light would have warmed the CGI objects but left the real beach footage untouched — an obvious mismatch. Instead a post-process warm/orange blend is applied as a time-varying overlay to the entire composite. This makes the real beach, sky, water, and CGI elements all warm up together, creating a coherent sunset progression from normal daylight through to a golden-orange final frame.</p>
+
+    <div class="stat-grid">
+      <div class="stat-cell">
+        <span class="stat-label">Grade start</span>
+        <span class="stat-value">Normal</span>
+        <span class="stat-unit">daytime light</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Grade mid</span>
+        <span class="stat-value">Warm</span>
+        <span class="stat-unit">slight amber shift</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Grade end</span>
+        <span class="stat-value">Sunset</span>
+        <span class="stat-unit">strong yellow/orange</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Music fade</span>
+        <span class="stat-value">−1.5</span>
+        <span class="stat-unit">s from end</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 9. FINAL RESULT ════ -->
+  <section class="section">
+    <p class="section-eyebrow">09</p>
+    <h2 class="section-title">Final Result &amp; <em>Limitations</em></h2>
+
+    <p>The final composite preserves exactly 826 frames at 30 fps. All target checks passed: same frame count as source, no letter pop at exit, no black shadow artefact under the woman, no scaling discontinuity, and a clean final frame after all CGI has left the shot.</p>
+
+    <div class="final-strip">
+      <figure>
+        <img src="./report_assets/10_final_mid_cgi_and_grade.jpg" alt="Final mid-shot">
+        <figcaption>Mid-shot: airship, letter, woman, and warm grade.</figcaption>
+      </figure>
+      <figure>
+        <img src="./report_assets/11_final_sunset_end_no_pop.jpg" alt="Final end frame">
+        <figcaption>End frame after CGI exits cleanly.</figcaption>
+      </figure>
+      <figure>
+        <img src="./report_assets/12_final_late_letter_exited.jpg" alt="Late shot confirming letter exit">
+        <figcaption>Late frame confirming the letter has exited before the ending.</figcaption>
+      </figure>
+    </div>
+
+    <p>Honest limitations of this production:</p>
+
+    <ul class="limitation-list">
+      <li>Full SfM reconstruction was attempted (pycolmap, 45 sampled images) but only 17 registered with 11 sparse 3D points — insufficient to drive a complete camera solve. Sky, water, sand, and moving people limited stable textured geometry across the whole pan.</li>
+      <li>The final camera solve is a pragmatic 2.5D matchmove driven by RANSAC-filtered 2D tracking, not a full 3D camera reconstruction. This is appropriate for the footage and invisible to the viewer.</li>
+      <li>The seated woman is a realistic image-plane insert, not a fully rigged or animated character. The decision not to force an interaction with the flying letter avoids unnatural contact animation.</li>
+    </ul>
+
+    <p>These constraints are offset by the high inlier count of the RANSAC anchor (median ~1185), semantic masks that guided placement away from unstable regions, procedural Blender objects with motion, correctly looped music, and a full-composite sunset grade that ties all elements together.</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ════ PIPELINE SUMMARY ════ -->
+  <section class="section">
+    <p class="section-eyebrow">Pipeline</p>
+    <h2 class="section-title">Processing <em>Steps</em></h2>
+
+    <div class="pipeline">
+      <div class="pipeline-step">
+        <div class="step-num">00</div>
+        <div class="step-body">
+          <div class="step-title">Media Extraction</div>
+          <p>Probed source video and music. Extracted metadata, sampled 12 representative frames, created source contact sheet. Output: <code>context/media_context.json</code></p>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <div class="step-title">Video Understanding</div>
+          <p>Described the source clip with a video-understanding model. Identified semantic regions, camera motion type, and good/bad tracking areas. Output: <code>context/context_brief.md</code></p>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <div class="step-title">OpenCV Feature Tracking</div>
+          <p>Analyzed camera motion with optical-flow tracking and RANSAC-filtered affine estimates. Produced track overlay video and <code>context/camera_motion.json</code>.</p>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <div class="step-title">GPU Semantic &amp; Depth Extraction</div>
+          <p>SegFormer semantic segmentation + relative depth estimation on the GPU server. Identified sky, water, sand, people, structures, rail, rocks. Output: masks, overlays, depth maps.</p>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">04</div>
+        <div class="step-body">
+          <div class="step-title">SfM Attempt (pycolmap)</div>
+          <p>Sparse reconstruction attempted from 45 sampled images. 17 registered, 11 3D points. Used as context; not strong enough for full camera solve due to scene characteristics.</p>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">05</div>
+        <div class="step-body">
+          <div class="step-title">RANSAC Anchor Tracking</div>
+          <p>Manually anchored a sand patch at frame 447. Propagated through frames 300–540 with RANSAC affine. Exported anchor path for Blender keyframes.</p>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">06</div>
+        <div class="step-body">
+          <div class="step-title">Blender Scene Construction</div>
+          <p>Built procedural airship, letter, and woman image plane in a 2.5D scene aligned to source frame. Transparent RGBA PNG sequence rendered: 826 frames.</p>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">07</div>
+        <div class="step-body">
+          <div class="step-title">FFmpeg Compositing</div>
+          <p>Composited CGI layer over original video. Overlaid looped+faded MP3. Applied time-varying warm sunset grade to the full composite. Exported final 826-frame result.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span>MatchMove Report · Enoshima Beach · May 30, 2025</span>
+  <span>1080 × 1920 · 30 fps · 826 frames · Blender + OpenCV + FFmpeg</span>
+</footer>
+
+</body>
+</html>

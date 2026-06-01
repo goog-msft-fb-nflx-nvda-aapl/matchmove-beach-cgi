@@ -1,0 +1,28 @@
+# Local media and generated outputs
+*.mp4
+*.mov
+*.m4v
+*.avi
+*.mp3
+*.wav
+*.zip
+
+# Blender/cache/generated frame sequences
+*.blend
+*.blend1
+context/
+frames/
+preview_*/
+cgi_frames_*/
+
+# Python/runtime
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+
