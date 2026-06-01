@@ -622,7 +622,7 @@
     </div>
 
     <figure>
-      <img src="./report_assets/01_source_contact_sheet.jpg" alt="Source contact sheet">
+      <img src="../report_assets/01_source_contact_sheet.jpg" alt="Source contact sheet">
       <figcaption>Sampled source frames showing the beach pan and shot composition.</figcaption>
     </figure>
   </section>
@@ -700,11 +700,11 @@
 
     <div class="fig-row">
       <figure>
-        <img src="./report_assets/02_track_overlay_05s.jpg" alt="Early feature tracks at 5s">
+        <img src="../report_assets/02_track_overlay_05s.jpg" alt="Early feature tracks at 5s">
         <figcaption>Early OpenCV feature tracks — frame ~0:05.</figcaption>
       </figure>
       <figure>
-        <img src="./report_assets/03_track_overlay_14s.jpg" alt="Mid-shot feature tracks at 14s">
+        <img src="../report_assets/03_track_overlay_14s.jpg" alt="Mid-shot feature tracks at 14s">
         <figcaption>Mid-shot feature tracks during the main CGI window — frame ~0:14.</figcaption>
       </figure>
     </div>
@@ -744,11 +744,11 @@
 
     <div class="fig-row">
       <figure>
-        <img src="./report_assets/04_semantic_segmentation_overlay_14s.jpg" alt="Segmentation overlay at 14s">
+        <img src="../report_assets/04_semantic_segmentation_overlay_14s.jpg" alt="Segmentation overlay at 14s">
         <figcaption>GPU semantic segmentation overlay at ~14.9 s.</figcaption>
       </figure>
       <figure>
-        <img src="./report_assets/05_relative_depth_14s.png" alt="Relative depth at 14s">
+        <img src="../report_assets/05_relative_depth_14s.png" alt="Relative depth at 14s">
         <figcaption>Relative depth estimate used as spatial reference — same frame.</figcaption>
       </figure>
     </div>
@@ -762,7 +762,7 @@
     <p>Simply parenting the seated woman to the screen produces an artificial sliding look during the pan. To counter this, a single sand anchor point was manually chosen in the stable beach section and propagated through neighboring frames using RANSAC-filtered affine transforms. The resulting 2D world-locked path was used to keyframe the woman's image plane in Blender.</p>
 
     <figure>
-      <img src="./report_assets/06_ransac_anchor_path_and_inliers.jpg" alt="RANSAC anchor path">
+      <img src="../report_assets/06_ransac_anchor_path_and_inliers.jpg" alt="RANSAC anchor path">
       <figcaption>RANSAC-accumulated sand anchor path and inlier quality across the tracked window.</figcaption>
     </figure>
 
@@ -817,17 +817,17 @@
 
     <div class="fig-row">
       <figure>
-        <img src="./report_assets/07_inserted_woman_cutout.png" alt="Woman cutout asset">
+        <img src="../report_assets/07_inserted_woman_cutout.png" alt="Woman cutout asset">
         <figcaption>Realistic seated woman cutout used as a flat image plane in Blender.</figcaption>
       </figure>
       <figure>
-        <img src="./report_assets/08_transparent_cgi_layer_frame450.png" alt="Transparent CGI layer frame 450">
+        <img src="../report_assets/08_transparent_cgi_layer_frame450.png" alt="Transparent CGI layer frame 450">
         <figcaption>Transparent Blender CGI render layer before compositing — frame 450.</figcaption>
       </figure>
     </div>
 
     <figure>
-      <img src="./report_assets/09_blender_composite_preview_frame450.jpg" alt="Blender composite preview">
+      <img src="../report_assets/09_blender_composite_preview_frame450.jpg" alt="Blender composite preview">
       <figcaption>Early Blender composite preview at frame 450, before final FFmpeg color grade.</figcaption>
     </figure>
   </section>
@@ -874,15 +874,15 @@
 
     <div class="final-strip">
       <figure>
-        <img src="./report_assets/10_final_mid_cgi_and_grade.jpg" alt="Final mid-shot">
+        <img src="../report_assets/10_final_mid_cgi_and_grade.jpg" alt="Final mid-shot">
         <figcaption>Mid-shot: airship, letter, woman, and warm grade.</figcaption>
       </figure>
       <figure>
-        <img src="./report_assets/11_final_sunset_end_no_pop.jpg" alt="Final end frame">
+        <img src="../report_assets/11_final_sunset_end_no_pop.jpg" alt="Final end frame">
         <figcaption>End frame after CGI exits cleanly.</figcaption>
       </figure>
       <figure>
-        <img src="./report_assets/12_final_late_letter_exited.jpg" alt="Late shot confirming letter exit">
+        <img src="../report_assets/12_final_late_letter_exited.jpg" alt="Late shot confirming letter exit">
         <figcaption>Late frame confirming the letter has exited before the ending.</figcaption>
       </figure>
     </div>
